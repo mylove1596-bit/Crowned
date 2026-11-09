@@ -1,0 +1,121 @@
+:root {
+    color-scheme: dark;
+    --bg: #0d0c0a;
+    --surface: #1a1814;
+    --text: #f7f3e9;
+    --muted: rgba(247, 243, 233, 0.62);
+    --accent: #e8b84b;
+    --accent-2: #b8863b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 0 20px 64px;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    -webkit-text-size-adjust: 100%;
+}
+
+main { max-width: 720px; margin: 0 auto; }
+
+h1 {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 56px 0 8px;
+    background: linear-gradient(100deg, #f3d07a, #b8863b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+h2 {
+    font-size: 21px;
+    font-weight: 700;
+    margin: 40px 0 8px;
+    color: var(--text);
+}
+
+h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 28px 0 6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+p { margin: 0 0 16px; color: var(--muted); }
+strong { color: var(--text); }
+code {
+    background: rgba(255, 255, 255, 0.07);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 0.9em;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul { margin: 0 0 16px; padding-left: 22px; color: var(--muted); }
+li { margin: 0 0 8px; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 24px;
+    font-size: 14px;
+}
+
+th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    vertical-align: top;
+}
+
+th { color: var(--text); font-weight: 650; }
+td { color: var(--muted); }
+
+footer {
+    max-width: 720px;
+    margin: 48px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+footer p { font-size: 12px; color: rgba(247, 243, 233, 0.38); }
+
+/* The landing page */
+.landing { padding-top: 48px; }
+.landing .tagline { font-size: 18px; line-height: 1.55; margin-bottom: 28px; }
+
+.cta {
+    display: block;
+    text-align: center;
+    padding: 16px 24px;
+    border-radius: 16px;
+    background: linear-gradient(100deg, #f3d07a, #b8863b);
+    color: #0d0c0a;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    margin-bottom: 44px;
+}
+.cta:hover { text-decoration: none; }
+
+.landing ul.cards { list-style: none; padding: 0; margin: 0 0 36px; }
+.landing ul.cards li {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+.landing ul.cards strong { display: block; font-size: 16px; }
+.landing ul.cards span { font-size: 14px; color: rgba(247, 243, 233, 0.6); }
+
+.landing ul.plain li { margin-bottom: 8px; }
+
+.landing .legal { font-size: 13px; margin-top: 40px; }
