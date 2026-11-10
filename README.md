@@ -22,7 +22,7 @@ The pages are plain HTML with one shared stylesheet (`style.css`). Keep the stru
 
 ## Before publishing
 
-- [ ] Replace the contact addresses `support@crowned.app` / `legal@crowned.app` / `privacy@crowned.app` if the domain is different.
+- [x] Contact address unified to `mylove1596@gamail.com` (support / legal / privacy all point to it).
 - [ ] Update the "Last updated" date at the top of each page when you change its content.
 - [ ] Update the App Store listing URL if the site address changes.
 
