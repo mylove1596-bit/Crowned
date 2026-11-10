@@ -23,7 +23,9 @@ The pages are plain HTML with one shared stylesheet (`style.css`). Keep the stru
 ## Before publishing
 
 - [x] Contact address unified to `mylove1596@gamail.com` (support / legal / privacy all point to it).
-- [ ] Update the "Last updated" date at the top of each page when you change its content.
+- [x] "Last updated" date bumped on the pages that changed (privacy / terms / eula → 10 November 2026).
+- [x] Copy matches the app's actual behaviour: the daily puzzle rolls over at 00:00 in the **device's current time zone**, and two crowns may not touch at all (orthogonally or diagonally).
+- [ ] Replace the placeholder App Store link in `index.html` (`https://apps.apple.com/`) with the real listing URL once the app is approved.
 - [ ] Update the App Store listing URL if the site address changes.
 
 ## Contact
