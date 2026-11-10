@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same puzzle, same day — Crowned</title>
+<meta name="description" content="Someone shared a Crowned daily logic puzzle with you. Play the exact same grid in the app.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0D0C0A">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<h1>Same puzzle. Same day.</h1>
+<p><strong>Someone shared a Crowned puzzle with you.</strong> Crowned is a daily logic grid: place one crown in every row, every column and every coloured region — and never let two crowns touch, not even diagonally.</p>
+
+<p>Every day at midnight your time zone, everyone gets the same puzzle. This link points at one exact puzzle, so you can play exactly what they played.</p>
+
+<h2>How to play</h2>
+<ul>
+  <li>One crown per row.</li>
+  <li>One crown per column.</li>
+  <li>One crown per coloured region.</li>
+  <li>No two crowns may touch — not side by side, not diagonally.</li>
+</ul>
+<p>Tap a cell and it cycles empty → × → 👑. Drag to mark several × at once.</p>
+
+<h2>Your puzzle</h2>
+<p id="puzzle-detail">Reading the puzzle link…</p>
+
+<h2>Get the app</h2>
+<p><a class="cta" id="open-in-app" href="#" hidden>Open this puzzle in Crowned</a></p>
+<p><a class="cta" href="https://apps.apple.com/app/id0000000000" id="app-store-link">Get Crowned on the App Store</a></p>
+<p><small>The App Store link is a placeholder until Crowned is published.</small></p>
+
+<h2>Contact</h2>
+<p>Questions: <a href="mailto:mylove1596@gamail.com">mylove1596@gamail.com</a></p>
+</main>
+<footer>
+<p>Crowned is published by an independent developer and is not affiliated with Apple, Inc. "Apple", "iPhone" and "App Store" are trademarks of Apple Inc.</p>
+</footer>
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var seed = params.get('seed');
+  var size = params.get('size');
+  var detail = document.getElementById('puzzle-detail');
+  var openInApp = document.getElementById('open-in-app');
+
+  if (!seed || !size) {
+    detail.textContent = 'This link is missing its puzzle parameters. Open it from the Crowned app.';
+    return;
+  }
+
+  detail.textContent = 'Puzzle #' + seed + ' — ' + size + '×' + size + '. Installing the app and opening this link drops you straight into it.';
+
+  // ⚠️ 自定义 scheme 是「App 已安装」时的兜底通道。
+  //    已安装的用户点 Universal Link 链接时，iOS 会直接打开 App，根本不会看到这个页面。
+  openInApp.href = 'crowned://play?seed=' + encodeURIComponent(seed) + '&size=' + encodeURIComponent(size);
+  openInApp.hidden = false;
+})();
+</script>
+</body>
+</html>

@@ -106,6 +106,10 @@ footer p { font-size: 12px; color: rgba(247, 243, 233, 0.38); }
 }
 .cta:hover { text-decoration: none; }
 
+/* ⚠️ 必须显式盖掉 .cta 的 display:block —— 否则 [hidden] 会被它覆盖，
+   按钮在「链接缺参数」时依然会显示出来。 */
+.cta[hidden] { display: none; }
+
 .landing ul.cards { list-style: none; padding: 0; margin: 0 0 36px; }
 .landing ul.cards li {
     background: rgba(255, 255, 255, 0.05);

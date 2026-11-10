@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "5A69A9H2K9.com.mylove1596.crowned"
+        ],
+        "components": [
+          {
+            "/": "/Crowned/play*",
+            "comment": "Shared challenge links"
+          }
+        ]
+      }
+    ]
+  }
+}
