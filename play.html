@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Same puzzle, same day — Crowned</title>
-<meta name="description" content="Someone shared a Crowned daily logic puzzle with you. Play the exact same grid in the app.">
+<meta name="description" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — play it in the app.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0D0C0A">
 <link rel="stylesheet" href="style.css">
@@ -14,7 +14,10 @@
 <h1>Same puzzle. Same day.</h1>
 <p><strong>Someone shared a Crowned puzzle with you.</strong> Crowned is a daily logic grid: place one crown in every row, every column and every coloured region — and never let two crowns touch, not even diagonally.</p>
 
-<p>Every day at midnight your time zone, everyone gets the same puzzle. This link points at one exact puzzle, so you can play exactly what they played.</p>
+<h2>The exact board they played</h2>
+<p id="puzzle-detail">Reading the puzzle link…</p>
+<div id="board" class="board" role="img" aria-label="The shared puzzle board"></div>
+<p id="board-note" class="board-note" hidden>Tap a cell in the app to mark it. Every rule is checked live.</p>
 
 <h2>How to play</h2>
 <ul>
@@ -24,9 +27,6 @@
   <li>No two crowns may touch — not side by side, not diagonally.</li>
 </ul>
 <p>Tap a cell and it cycles empty → × → 👑. Drag to mark several × at once.</p>
-
-<h2>Your puzzle</h2>
-<p id="puzzle-detail">Reading the puzzle link…</p>
 
 <h2>Get the app</h2>
 <p><a class="cta" id="open-in-app" href="#" hidden>Open this puzzle in Crowned</a></p>
@@ -39,26 +39,132 @@
 <footer>
 <p>Crowned is published by an independent developer and is not affiliated with Apple, Inc. "Apple", "iPhone" and "App Store" are trademarks of Apple Inc.</p>
 </footer>
+<script src="crowned-generator.js"></script>
 <script>
 (function () {
+  'use strict';
+
+  // ⚠️ 与 App 内 `Crowned/Theme/Theme.swift` 的 `Palette.regionColors` 完全一致，
+  //    并且已经按 App 暗色模式的规则压暗 22%（`darkened(base, by: 0.22)`）。
+  //    网页上显示的色块必须和 App 里一模一样，否则「同一道题」这句话就不成立了。
+  //    这 9 个值是直接从 App 渲染出的棋盘图（preview/board_*_dark.png）采样得到的。
+  var REGION_COLORS = [
+    '#C78787', // 0 柔和珊瑚红
+    '#C7A781', // 1 奶油杏黄
+    '#9DC795', // 2 薄荷青
+    '#79BFC7', // 3 冰川蓝
+    '#938BC7', // 4 薰衣草紫
+    '#C79BC7', // 5 樱花粉
+    '#7F896B', // 6 鼠尾草绿
+    '#B5B99D', // 7 暖沙色
+    '#83A9AB'  // 8 雾霾蓝
+  ];
+
+  // 与 App 内 `GridSize.title` 一致
+  var SIZE_TITLES = {
+    6: '6×6 Warmup',
+    7: '7×7 Classic',
+    8: '8×8 Master',
+    9: '9×9 Grandmaster'
+  };
+
+  var REGION_LINE = 'rgba(255, 255, 255, 0.85)';   // 区域之间的粗边界
+
   var params = new URLSearchParams(window.location.search);
   var seed = params.get('seed');
-  var size = params.get('size');
+  var size = parseInt(params.get('size'), 10);
   var detail = document.getElementById('puzzle-detail');
   var openInApp = document.getElementById('open-in-app');
+  var board = document.getElementById('board');
+  var boardNote = document.getElementById('board-note');
 
-  if (!seed || !size) {
+  if (!seed || !Number.isInteger(size) || size < 6 || size > 9) {
     detail.textContent = 'This link is missing its puzzle parameters. Open it from the Crowned app.';
+    board.hidden = true;
     return;
   }
 
-  detail.textContent = 'Puzzle #' + seed + ' — ' + size + '×' + size + '. Installing the app and opening this link drops you straight into it.';
+  // ⚠️ 种子是 UInt64，最长 20 位十进制，早就超出 JS 的安全整数范围，
+  //    必须走 BigInt，否则解析出来的 seed 是错的，生成出来的就是另一道题。
+  var seedValue;
+  try {
+    seedValue = BigInt(seed);
+  } catch (e) {
+    detail.textContent = 'This puzzle link is malformed. Open it from the Crowned app.';
+    board.hidden = true;
+    return;
+  }
+
+  var level = null;
+  try {
+    level = window.CrownedPuzzle.generateLevel(seedValue, size);
+  } catch (e) {
+    level = null;
+  }
+
+  if (!level) {
+    // 生成失败（理论上不会发生）：退回到纯文字描述，功能不受影响
+    detail.textContent = 'Puzzle #' + seed + ' — ' + size + '×' + size + '. Installing the app and opening this link drops you straight into it.';
+  } else {
+    detail.textContent = (SIZE_TITLES[size] || (size + '×' + size)) + ' — the exact grid they solved. ' +
+                         'Their time is on their post; yours starts now.';
+    renderBoard(level);
+    boardNote.hidden = false;
+  }
 
   // The custom URL scheme is the fallback for devices that already have the app.
   // When iOS cannot open the Universal Link directly, it lands on this page and
   // the button below jumps straight into the app via crowned:// (registered in Info.plist).
   openInApp.href = 'crowned://play?seed=' + encodeURIComponent(seed) + '&size=' + encodeURIComponent(size);
   openInApp.hidden = false;
+
+  /**
+   * 渲染棋盘。
+   *
+   * ⚠️ 边界规则与 App 内 `PuzzleBoardView.regionBorder` 一致：
+   *    · 与不同 regionID 的邻居相邻 → 3px 白线（白 0.85）
+   *    · 与相同 regionID 的邻居相邻 → 不画线，只留 2px 的棋盘底色缝隙
+   *    · 棋盘外框 → 3px 白线（由容器 border 负责）
+   *
+   * ⚠️ 同区域为什么不画那条 0.5px 细线：
+   *    App 里那条线是**居中描边**在格子边缘上的，因此它落在 2px 的缝隙里
+   *    （暗色底 + 白 0.14，几乎看不见）。如果像区域边界那样画在格子**内侧**，
+   *    白 0.14 叠在浅色块上会变成一条明显的亮线，和 App 完全不像。
+   *    缝隙本身已经把同区域的格子分开了。
+   *
+   * ⚠️ 每条内部边界只画一次（画在左/上那一侧的格子上），
+   *    否则相邻两格各画一条会叠成 6px，比 App 里粗一倍。
+   */
+  function renderBoard(lvl) {
+    var n = lvl.size;
+    var grid = lvl.regionGrid;
+    board.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    board.innerHTML = '';
+
+    for (var r = 0; r < n; r++) {
+      for (var c = 0; c < n; c++) {
+        var region = grid[r][c];
+        var cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style.background = REGION_COLORS[region] || REGION_COLORS[0];
+
+        var shadows = [];
+
+        // 右边：与右邻居不同区域 → 粗线；同区域或棋盘外框 → 不画
+        if (c < n - 1 && grid[r][c + 1] !== region) {
+          shadows.push('inset -3px 0 0 ' + REGION_LINE);
+        }
+
+        // 下边：同理
+        if (r < n - 1 && grid[r + 1][c] !== region) {
+          shadows.push('inset 0 -3px 0 ' + REGION_LINE);
+        }
+
+        if (shadows.length > 0) cell.style.boxShadow = shadows.join(', ');
+        board.appendChild(cell);
+      }
+    }
+  }
 })();
 </script>
 </body>

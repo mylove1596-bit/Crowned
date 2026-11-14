@@ -123,3 +123,44 @@ footer p { font-size: 12px; color: rgba(247, 243, 233, 0.38); }
 .landing ul.plain li { margin-bottom: 8px; }
 
 .landing .legal { font-size: 13px; margin-top: 40px; }
+
+/* ============================================================
+   分享落地页的棋盘
+   ============================================================
+   ⚠️ 这块样式必须和 App 内 `Crowned/Theme/Theme.swift` + `PuzzleBoardView.swift`
+      的视觉规则一致，网页上显示的盘面要像 App 里那一张：
+      · 格子间距 2px（App 的 Metrics.cellSpacing）
+      · 区域之间的边界 3px 白线，同区域内部 0.5px 淡线（App 的 regionBorder）
+      · 外框 3px 白线，圆角 18px（App 的 cornerRadius + 6）
+   边界用 inset box-shadow 画在格子的内侧，每条内部边界只画一次，
+   否则相邻两格各画一条会叠成 6px，比 App 里粗一倍。 */
+.board {
+    display: grid;
+    gap: 2px;
+    width: min(90vw, 420px);
+    margin: 0 auto 18px;
+    padding: 0;
+    /* 棋盘底色 = App 内 ThemeColor.surface，让缝隙和外框和 App 里完全一致 */
+    background: #21242E;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.board .cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 2px;
+}
+
+.board[hidden] { display: none; }
+
+.board-note {
+    text-align: center;
+    font-size: 13px;
+    color: rgba(247, 243, 233, 0.5);
+    margin: 0 0 8px;
+}
+
+.board-note[hidden] { display: none; }
+

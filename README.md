@@ -20,6 +20,26 @@ published on the App Store and the entitlement is live on the App ID.
 Until then the `crowned://play?seed=…&size=…` custom scheme is the working
 fallback — `play.html` offers it as an "Open this puzzle in Crowned" button.
 
+## `crowned-generator.js` — the puzzle generator, ported to JavaScript
+
+`play.html` renders the **actual board** the sender played, so the page needs
+the same level generator the app uses. `crowned-generator.js` is a faithful
+port of the app's `PuzzleGenerator` (SplitMix64 → crown placement → region
+growth → unique-solution check).
+
+Both sides must produce byte-identical boards for the same `seed` + `size`,
+otherwise the page shows a different puzzle than the app opens — and nothing
+would throw, it would just quietly break the share link.
+
+The port is verified against the Swift original:
+
+```bash
+bash Tools/verify_web_generator.sh   # 2284 boards + hashes, compared line by line
+```
+
+The script lives in the app repository (`Tools/verify_web_generator.sh`), not
+here — this repository only ships the JavaScript it produces.
+
 ## Live site
 
 <https://mylove1596-bit.github.io/Crowned/>
@@ -28,15 +48,16 @@ fallback — `play.html` offers it as an "Open this puzzle in Crowned" button.
 
 Edit the HTML files directly and push to `main` — GitHub Actions redeploys the site automatically.
 
-The pages are plain HTML with one shared stylesheet (`style.css`). Keep the structure consistent with the sibling `spill-privacy` repository.
+The pages are plain HTML with one shared stylesheet (`style.css`) plus
+`crowned-generator.js`. Keep the structure consistent with the sibling
+`spill-privacy` repository.
 
 ## Before publishing
 
 - [x] Contact address unified to `mylove1596@gamail.com` (support / legal / privacy all point to it).
 - [x] "Last updated" date bumped on the pages that changed (privacy / terms / eula → 10 November 2026).
 - [x] Copy matches the app's actual behaviour: the daily puzzle rolls over at 00:00 in the **device's current time zone**, and two crowns may not touch at all (orthogonally or diagonally).
-- [ ] Replace the placeholder App Store link in `index.html` (`https://apps.apple.com/`) with the real listing URL once the app is approved.
-- [ ] Replace the placeholder App Store ID in `play.html` (`id0000000000`) with the real listing ID once the app is approved.
+- [ ] Replace the App Store search link in `index.html` and `play.html` with the real listing URL (`https://apps.apple.com/app/id6832871902`) once the app is approved.
 - [ ] Update the App Store listing URL if the site address changes.
 
 ## Contact
