@@ -7,6 +7,9 @@
 <meta name="description" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — play it in the app.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0D0C0A">
+<!-- Smart App Banner：iOS Safari 顶部自动弹出「打开 Crowned Daily」，点击直达 App。
+     App 未上架时横幅不显示（无害），上架瞬间自动生效，不用再改一次。 -->
+<meta name="apple-itunes-app" content="app-id=6832871902">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -100,6 +103,23 @@
     level = window.CrownedPuzzle.generateLevel(seedValue, size);
   } catch (e) {
     level = null;
+  }
+
+  // Smart App Banner：把当前题目的直达参数带上，点横幅就能落到那道题
+  //
+  // ⚠️ 用 https 形式而不是 crowned:// —— iOS 只接受 URL 作为 app-argument。
+  //    App 侧的 `DeepLinkParser.isPlayEndpoint` 已经同时支持
+  //    `crowned://play?…`（host == "play"）和
+  //    `https://…/Crowned/play?…`（路径最后一段 == "play"），
+  //    所以 App 收到 https 形式的 URL 一样能解析出 seed/size，**App 端不用改**。
+  //
+  // ⚠️ 只有参数合法时才改写 banner：参数缺失时保留静态的 app-id，
+  //    点横幅就是正常打开 App，而不是丢一个解析不了的链接进去。
+  var banner = document.querySelector('meta[name="apple-itunes-app"]');
+  if (banner) {
+    var appArg = 'https://mylove1596-bit.github.io/Crowned/play?seed=' +
+                 encodeURIComponent(seed) + '&size=' + encodeURIComponent(size);
+    banner.setAttribute('content', 'app-id=6832871902, app-argument=' + appArg);
   }
 
   if (!level) {
