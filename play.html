@@ -30,8 +30,8 @@
 
 <h2>Get the app</h2>
 <p><a class="cta" id="open-in-app" href="#" hidden>Open this puzzle in Crowned</a></p>
-<p><a class="cta" href="https://apps.apple.com/app/id0000000000" id="app-store-link">Get Crowned on the App Store</a></p>
-<p><small>The App Store link is a placeholder until Crowned is published.</small></p>
+<p><a class="cta" href="https://apps.apple.com/us/search?term=Crowned%20Daily" id="app-store-link">Get Crowned on the App Store</a></p>
+<p><small>Crowned is not on the App Store yet. Search for "Crowned Daily" once it is published.</small></p>
 
 <h2>Contact</h2>
 <p>Questions: <a href="mailto:mylove1596@gamail.com">mylove1596@gamail.com</a></p>
@@ -54,8 +54,9 @@
 
   detail.textContent = 'Puzzle #' + seed + ' — ' + size + '×' + size + '. Installing the app and opening this link drops you straight into it.';
 
-  // ⚠️ 自定义 scheme 是「App 已安装」时的兜底通道。
-  //    已安装的用户点 Universal Link 链接时，iOS 会直接打开 App，根本不会看到这个页面。
+  // The custom URL scheme is the fallback for devices that already have the app.
+  // When iOS cannot open the Universal Link directly, it lands on this page and
+  // the button below jumps straight into the app via crowned:// (registered in Info.plist).
   openInApp.href = 'crowned://play?seed=' + encodeURIComponent(seed) + '&size=' + encodeURIComponent(size);
   openInApp.hidden = false;
 })();
