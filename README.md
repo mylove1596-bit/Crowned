@@ -55,7 +55,7 @@ The pages are plain HTML with one shared stylesheet (`style.css`) plus
 ## Before publishing
 
 - [x] Contact address unified to `mylove1596@gmail.com` (support / legal / privacy all point to it).
-- [x] "Last updated" date bumped on the pages that changed (privacy / terms / eula → 16 November 2026).
+- [x] "Last updated" shows each page's latest revision date (privacy / terms / eula → 16 November 2026). Section 11 no longer obliges a date bump on every edit.
 - [x] Copy matches the app's actual behaviour: the daily puzzle rolls over at 00:00 in the **device's current time zone**, and two crowns may not touch at all (orthogonally or diagonally).
 - [ ] Replace the App Store search link in `index.html` and `play.html` with the real listing URL (`https://apps.apple.com/app/id6832871902`) once the app is approved.
 - [ ] Update the App Store listing URL if the site address changes.
