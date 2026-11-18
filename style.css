@@ -106,6 +106,16 @@ footer p { font-size: 12px; color: rgba(247, 243, 233, 0.38); }
 }
 .cta:hover { text-decoration: none; }
 
+/* 商店按钮下方的小字说明。上边距用负值把 .cta 的 44px 下边距收回来，
+   否则按钮和说明之间会隔出一大片空白。 */
+.cta-note {
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(247, 243, 233, 0.5);
+    text-align: center;
+    margin: -32px 0 40px;
+}
+
 /* ⚠️ 必须显式盖掉 .cta 的 display:block —— 否则 [hidden] 会被它覆盖，
    按钮在「链接缺参数」时依然会显示出来。 */
 .cta[hidden] { display: none; }
