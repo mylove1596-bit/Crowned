@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Same puzzle, same day — Crowned</title>
-<meta name="description" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — play it in the app.">
+<meta name="description" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — and you can play it right here, free.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0D0C0A">
 <!-- Smart App Banner：iOS Safari 顶部自动弹出「打开 Crowned Daily」，点击直达 App。
@@ -15,12 +15,26 @@
 <body>
 <main>
 <h1>Same puzzle. Same day.</h1>
-<p><strong>Someone shared a Crowned puzzle with you.</strong> Crowned is a daily logic grid: place one crown in every row, every column and every coloured region — and never let two crowns touch, not even diagonally.</p>
+<p><strong>Someone shared a Crowned puzzle with you.</strong> This is the exact board they played — and you can play it right here, in your browser, for free.</p>
 
 <h2>The exact board they played</h2>
 <p id="puzzle-detail">Reading the puzzle link…</p>
-<div id="board" class="board" role="img" aria-label="The shared puzzle board"></div>
-<p id="board-note" class="board-note" hidden>Tap a cell in the app to mark it. Every rule is checked live.</p>
+
+<div class="board-wrap">
+  <div class="board" id="board" role="grid" aria-label="The shared puzzle board"></div>
+</div>
+
+<div class="hud" id="hud">
+  <span class="hud-time" id="hud-time">0:00</span>
+  <span class="hud-actions">
+    <button type="button" id="btn-undo" class="hud-btn" disabled>Undo</button>
+    <button type="button" id="btn-reset" class="hud-btn" disabled>Reset</button>
+  </span>
+</div>
+
+<p class="board-status" id="board-status" hidden></p>
+
+<p class="board-note" id="board-note" hidden>Tap a cell to cycle empty → × → 👑. Drag to mark several × at once.</p>
 
 <h2>How to play</h2>
 <ul>
@@ -29,11 +43,22 @@
   <li>One crown per coloured region.</li>
   <li>No two crowns may touch — not side by side, not diagonally.</li>
 </ul>
-<p>Tap a cell and it cycles empty → × → 👑. Drag to mark several × at once.</p>
+<p>Every board has exactly one solution, so there's never any guessing: either you place all the crowns or you haven't solved it yet.</p>
+
+<h2 id="solved-heading" hidden>Solved</h2>
+<div id="solved-panel" hidden>
+  <p id="solved-line"></p>
+  <p><button type="button" id="btn-share" class="cta-button">Copy your result</button></p>
+  <p><small id="share-hint" hidden>Copied to your clipboard.</small></p>
+  <p id="share-fallback-wrap" hidden>
+    <small>This browser blocked the copy. Select the text below and copy it yourself — then post it wherever you like.</small><br>
+    <textarea id="share-fallback" readonly rows="9" spellcheck="false"></textarea>
+  </p>
+</div>
 
 <h2>Get the app</h2>
-<p><a class="cta" id="open-in-app" href="#" hidden>Open this puzzle in Crowned</a></p>
 <p><a class="cta" href="https://apps.apple.com/app/crowned-daily/id6832871902" id="app-store-link">Get Crowned on the App Store</a></p>
+<p><a class="cta-note" id="daily-note" hidden>The daily puzzle is new every day at your local midnight — that one lives in the app, along with your streak.</a></p>
 <p><small>Free to play on iPhone and iPad. The daily puzzle is free for everyone.</small></p>
 
 <h2>Contact</h2>
@@ -43,6 +68,7 @@
 <p>Crowned is published by an independent developer and is not affiliated with Apple, Inc. "Apple", "iPhone" and "App Store" are trademarks of Apple Inc.</p>
 </footer>
 <script src="crowned-generator.js"></script>
+<script src="crowned-rules.js"></script>
 <script>
 (function () {
   'use strict';
@@ -77,9 +103,20 @@
   var seed = params.get('seed');
   var size = parseInt(params.get('size'), 10);
   var detail = document.getElementById('puzzle-detail');
-  var openInApp = document.getElementById('open-in-app');
   var board = document.getElementById('board');
   var boardNote = document.getElementById('board-note');
+  var hudTime = document.getElementById('hud-time');
+  var btnUndo = document.getElementById('btn-undo');
+  var btnReset = document.getElementById('btn-reset');
+  var boardStatus = document.getElementById('board-status');
+  var solvedHeading = document.getElementById('solved-heading');
+  var solvedPanel = document.getElementById('solved-panel');
+  var solvedLine = document.getElementById('solved-line');
+  var btnShare = document.getElementById('btn-share');
+  var shareHint = document.getElementById('share-hint');
+  var shareFallbackWrap = document.getElementById('share-fallback-wrap');
+  var shareFallback = document.getElementById('share-fallback');
+  var dailyNote = document.getElementById('daily-note');
 
   if (!seed || !Number.isInteger(size) || size < 6 || size > 9) {
     detail.textContent = 'This link is missing its puzzle parameters. Open it from the Crowned app.';
@@ -125,18 +162,31 @@
   if (!level) {
     // 生成失败（理论上不会发生）：退回到纯文字描述，功能不受影响
     detail.textContent = 'Puzzle #' + seed + ' — ' + size + '×' + size + '. Installing the app and opening this link drops you straight into it.';
-  } else {
-    detail.textContent = (SIZE_TITLES[size] || (size + '×' + size)) + ' — the exact grid they solved. ' +
-                         'Their time is on their post; yours starts now.';
-    renderBoard(level);
-    boardNote.hidden = false;
+    return;
   }
 
-  // The custom URL scheme is the fallback for devices that already have the app.
-  // When iOS cannot open the Universal Link directly, it lands on this page and
-  // the button below jumps straight into the app via crowned:// (registered in Info.plist).
-  openInApp.href = 'crowned://play?seed=' + encodeURIComponent(seed) + '&size=' + encodeURIComponent(size);
-  openInApp.hidden = false;
+  detail.textContent = (SIZE_TITLES[size] || (size + '×' + size)) + ' — the exact grid they solved. ' +
+                       'Their time is on their post; yours starts now.';
+  boardNote.hidden = false;
+  dailyNote.hidden = false;
+
+  // ================================================================
+  //  规则引擎
+  //
+  //  ⚠️ 规则本身全在 `crowned-rules.js` 里（与 App 的 GameEngine.swift 逐条对应），
+  //    本文件只负责：渲染、指针事件、计时器、分享文案。
+  //    规则层有独立的自动化测试：`node Tools/test_web_rules.js`（136 项断言）。
+  // ================================================================
+
+  var N = level.size;
+  var GRID = level.regionGrid;
+  var engine = window.CrownedRules.createEngine(level);
+
+  var timerId = null;
+
+  // ================================================================
+  //  渲染
+  // ================================================================
 
   /**
    * 渲染棋盘。
@@ -155,35 +205,304 @@
    * ⚠️ 每条内部边界只画一次（画在左/上那一侧的格子上），
    *    否则相邻两格各画一条会叠成 6px，比 App 里粗一倍。
    */
-  function renderBoard(lvl) {
-    var n = lvl.size;
-    var grid = lvl.regionGrid;
-    board.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+  function renderBoard() {
+    board.style.gridTemplateColumns = 'repeat(' + N + ', 1fr)';
     board.innerHTML = '';
 
-    for (var r = 0; r < n; r++) {
-      for (var c = 0; c < n; c++) {
-        var region = grid[r][c];
+    for (var r = 0; r < N; r++) {
+      for (var c = 0; c < N; c++) {
+        var region = GRID[r][c];
         var cell = document.createElement('div');
         cell.className = 'cell';
         cell.style.background = REGION_COLORS[region] || REGION_COLORS[0];
+        cell.dataset.r = String(r);
+        cell.dataset.c = String(c);
+        cell.setAttribute('role', 'gridcell');
 
         var shadows = [];
 
         // 右边：与右邻居不同区域 → 粗线；同区域或棋盘外框 → 不画
-        if (c < n - 1 && grid[r][c + 1] !== region) {
+        if (c < N - 1 && GRID[r][c + 1] !== region) {
           shadows.push('inset -3px 0 0 ' + REGION_LINE);
         }
 
         // 下边：同理
-        if (r < n - 1 && grid[r + 1][c] !== region) {
+        if (r < N - 1 && GRID[r + 1][c] !== region) {
           shadows.push('inset 0 -3px 0 ' + REGION_LINE);
         }
 
         if (shadows.length > 0) cell.style.boxShadow = shadows.join(', ');
+
+        var x = document.createElement('span');
+        x.className = 'mark mark-x';
+        x.innerHTML = '<i></i><i></i>';
+
+        var crown = document.createElement('span');
+        crown.className = 'mark mark-crown';
+        crown.textContent = '👑';
+
+        cell.appendChild(x);
+        cell.appendChild(crown);
         board.appendChild(cell);
       }
     }
+  }
+
+  /** 把状态刷到 DOM 上（不重建节点，避免拖拽时丢失事件绑定） */
+  function paintBoard() {
+    var nodes = board.children;
+    for (var r = 0; r < N; r++) {
+      for (var c = 0; c < N; c++) {
+        var cell = engine.cells[r][c];
+        var node = nodes[r * N + c];
+        node.classList.toggle('is-cross', cell.state === engine.CROSS);
+        node.classList.toggle('is-crown', cell.state === engine.CROWN);
+        node.classList.toggle('is-auto', cell.isAutoCrossed);
+        node.classList.toggle('is-conflict', cell.hasConflict);
+      }
+    }
+    btnUndo.disabled = !engine.canUndo;
+    btnReset.disabled = !engine.canUndo && !anyMarked();
+  }
+
+  function anyMarked() {
+    for (var r = 0; r < N; r++) {
+      for (var c = 0; c < N; c++) {
+        if (engine.cells[r][c].state !== engine.EMPTY) return true;
+      }
+    }
+    return false;
+  }
+
+  function formatTime(seconds) {
+    var m = Math.floor(seconds / 60);
+    var s = seconds % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  /** 规则层跑完一次判定后，把结果翻译成人话 */
+  function reportStatus() {
+    var result = engine.validateBoard();
+    boardStatus.hidden = false;
+
+    if (result.isSolved) {
+      boardStatus.textContent = 'Solved in ' + formatTime(engine.elapsedSeconds) + '.';
+      showSolved();
+    } else if (result.hasConflict) {
+      boardStatus.textContent = 'Two of those crowns conflict. One crown per row, per column, per region — and none may touch.';
+    } else {
+      boardStatus.textContent = result.crownCount + ' of ' + N + ' crowns placed.';
+    }
+  }
+
+  // ================================================================
+  //  交互：点按循环 + 单指拖拽连涂
+  // ================================================================
+
+  var dragMode = 'none';
+  var dragMoved = false;
+  var dragLast = null;
+
+  function cellFromEvent(ev) {
+    var target = ev.target;
+    while (target && target !== board) {
+      if (target.dataset && target.dataset.r !== undefined) {
+        return { r: parseInt(target.dataset.r, 10), c: parseInt(target.dataset.c, 10) };
+      }
+      target = target.parentNode;
+    }
+    return null;
+  }
+
+  board.addEventListener('pointerdown', function (ev) {
+    if (engine.isSolved) return;
+    var pos = cellFromEvent(ev);
+    if (!pos) return;
+    ev.preventDefault();
+
+    dragMode = engine.beginDrag(pos.r, pos.c);
+    dragMoved = false;
+    dragLast = pos;
+
+    try { board.setPointerCapture(ev.pointerId); } catch (e) { /* 不支持就算了 */ }
+  });
+
+  board.addEventListener('pointermove', function (ev) {
+    if (dragMode === 'none' || dragLast === null) return;
+    var pos = cellFromEvent(ev);
+    if (!pos) return;
+    if (pos.r === dragLast.r && pos.c === dragLast.c) return;
+
+    // ⚠️ 只有真正拖动到别的格子才算「拖拽」；
+    //    否则一次点按会先被涂成 ×、再在抬起时循环成 👑，一次点击跳两级。
+    if (!dragMoved) dragMoved = true;
+    engine.handleDrag(pos.r, pos.c, dragMode);
+    dragLast = pos;
+    paintBoard();
+  });
+
+  function endDrag() {
+    if (dragMode !== 'none' && !dragMoved && dragLast !== null) {
+      engine.handleTap(dragLast.r, dragLast.c);   // 视作一次点按
+    }
+    dragMode = 'none';
+    dragMoved = false;
+    dragLast = null;
+    reportStatus();
+    paintBoard();
+  }
+
+  board.addEventListener('pointerup', endDrag);
+  board.addEventListener('pointercancel', endDrag);
+  board.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
+
+  // ================================================================
+  //  计时器 / 撤销 / 重置
+  // ================================================================
+
+  function startTimer() {
+    if (timerId !== null) return;
+    timerId = window.setInterval(function () {
+      if (engine.isSolved) return;
+      engine.setElapsedSeconds(engine.elapsedSeconds + 1);
+      hudTime.textContent = formatTime(engine.elapsedSeconds);
+    }, 1000);
+  }
+
+  btnUndo.addEventListener('click', function () {
+    if (!engine.undo()) return;
+    solvedPanel.hidden = true;
+    solvedHeading.hidden = true;
+    shareHint.hidden = true;
+    shareFallbackWrap.hidden = true;
+    startTimer();
+    reportStatus();
+    paintBoard();
+  });
+
+  btnReset.addEventListener('click', function () {
+    engine.reset();
+    solvedPanel.hidden = true;
+    solvedHeading.hidden = true;
+    shareHint.hidden = true;
+    shareFallbackWrap.hidden = true;
+    shareFallback.value = '';
+    startTimer();
+    reportStatus();
+    paintBoard();
+  });
+
+  // ================================================================
+  //  通关：战报 + 分享
+  // ================================================================
+
+  /**
+   * 战报文本 —— 交给规则模块生成，与 App 内 `ShareTextBuilder.battleReport` 同形。
+   *
+   * ⚠️ 网页端没有连胜概念（连胜是 App 里的），所以 streak 传 0 → 不输出连胜那一行。
+   * ⚠️ 同样不写「击败 X% 玩家」—— 那是拿玩家自己的历史成绩估的，不是真的击败了多少人。
+   */
+  function battleReport() {
+    return window.CrownedRules.buildReport(level, engine.cells, engine.elapsedSeconds, 0, SIZE_TITLES[N]);
+  }
+
+  function showSolved() {
+    solvedHeading.hidden = false;
+    solvedPanel.hidden = false;
+    solvedLine.textContent = 'You solved the exact board they played, in ' + formatTime(engine.elapsedSeconds) + '.';
+  }
+
+  /**
+   * 复制战报到剪贴板。
+   *
+   * ⚠️ 为什么不能只用 `navigator.clipboard`：
+   *    1) 它只在**安全上下文**（HTTPS / localhost）里存在；
+   *    2) 部分内嵌浏览器 / WebView 会直接拒掉 `writeText`；
+   *    3) 老版本 Safari 没有这个 API。
+   *    所以必须有回退路径。
+   *
+   * ⚠️ 为什么回退路径**不能**用 `window.prompt()`：
+   *    - 战报是**多行**文本，而 prompt() 只有一个单行输入框，复制出去行结构全丢；
+   *    - 很多内嵌环境（Electron 面板、部分 App 内置浏览器）禁用 prompt，
+   *      调用它会抛未捕获异常 —— 用户既拿不到文本，也看不到任何报错。
+   *    所以回退用「隐藏 textarea + execCommand('copy')」（能保留多行）；
+   *    再不行就把文本显示出来，让用户自己长按复制。
+   */
+  function copyToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        return navigator.clipboard.writeText(text).then(function () {
+          return true;
+        }, function () {
+          return legacyCopy(text);
+        });
+      } catch (e) {
+        return Promise.resolve(legacyCopy(text));
+      }
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+
+  /** 老办法：隐藏 textarea + execCommand('copy')，保留多行 */
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '0';
+    ta.style.width = '1px';
+    ta.style.height = '1px';
+    ta.style.padding = '0';
+    ta.style.border = 'none';
+    ta.style.outline = 'none';
+    ta.style.boxShadow = 'none';
+    ta.style.background = 'transparent';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  btnShare.addEventListener('click', function () {
+    var text = battleReport();
+    copyToClipboard(text).then(function (ok) {
+      shareHint.hidden = !ok;
+      shareFallbackWrap.hidden = ok;
+      if (!ok) {
+        // 复制不了就把文本摊开给用户，至少还能手动选中复制
+        shareFallback.value = text;
+        shareFallback.focus();
+        shareFallback.select();
+      }
+    });
+  });
+
+  // ================================================================
+  //  启动
+  // ================================================================
+
+  renderBoard();
+  reportStatus();
+  paintBoard();
+  startTimer();
+
+  // 棋盘尺寸变化时，用 CSS 变量把叉号线宽与皇冠字号跟着缩放（App 里是按格子尺寸算的）
+  function syncCellSize() {
+    var w = board.clientWidth;
+    if (!w) return;
+    board.style.setProperty('--cw', (w / N) + 'px');
+  }
+  syncCellSize();
+  if (window.ResizeObserver) {
+    new window.ResizeObserver(syncCellSize).observe(board);
+  } else {
+    window.addEventListener('resize', syncCellSize);
   }
 })();
 </script>

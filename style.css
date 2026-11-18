@@ -174,3 +174,155 @@ footer p { font-size: 12px; color: rgba(247, 243, 233, 0.38); }
 
 .board-note[hidden] { display: none; }
 
+
+/* ============================================================
+   可玩的分享页棋盘（网页端直接玩同题）
+   ============================================================
+   ⚠️ 这块的视觉规则必须和 App 内 `Crowned/Views/Gameplay/PuzzleBoardView.swift`
+      对齐，网页上看到的盘面要和 App 里那一张一模一样：
+      · 叉号线宽 = max(1.6px, 格子边长 × 0.075)，App 里是 `max(1.6, size * 0.075)`
+      · 叉号长度 = 格子边长 × 0.36
+      · 皇冠字号 = 格子边长 × 0.52，App 里是 `.font(.system(size: size * 0.52, weight: .bold))`
+      · 玩家手动标的 × 不透明度 0.8；自动 × 不透明度 0.42
+      · 冲突格盖红色斜纹
+   格子边长由 JS 写进 `--cw`（board 宽 ÷ N），所以棋盘缩放时这些值跟着缩放。 */
+
+.board {
+    touch-action: none;          /* 拖拽连涂时不要顺带滚页面 */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.board .cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 皇冠 / 叉号默认不显示，由格子上的状态类控制 */
+.board .mark {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    line-height: 1;
+}
+
+.board .cell.is-cross .mark-x { display: flex; }
+.board .cell.is-crown .mark-crown { display: flex; }
+
+/* 叉号：用两条带圆头的线交叉，和 App 的 CrossMark 形状一致 */
+.board .mark-x i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--cw, 40px) * 0.36);
+    height: 0;
+    margin-left: calc(var(--cw, 40px) * -0.18);
+    border-top: max(1.6px, calc(var(--cw, 40px) * 0.075)) solid var(--text);
+    border-radius: 2px;
+    opacity: 0.8;
+}
+.board .mark-x i:nth-child(1) { transform: rotate(45deg); }
+.board .mark-x i:nth-child(2) { transform: rotate(-45deg); }
+/* 自动 × 更淡 —— App 里 `opacity(cell.isAutoCrossed ? 0.42 : 0.8)` */
+.board .cell.is-auto .mark-x i { opacity: 0.42; }
+
+/* 皇冠 */
+.board .mark-crown {
+    font-size: calc(var(--cw, 40px) * 0.52);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* 冲突：红色斜纹盖在格子上 */
+.board .cell.is-conflict::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(220, 60, 60, 0.45) 0 4px,
+        rgba(220, 60, 60, 0.12) 4px 8px
+    );
+    pointer-events: none;
+}
+
+/* ============================================================
+   棋盘下方的计时器与操作条
+   ============================================================ */
+.hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: min(90vw, 420px);
+    margin: 0 auto 10px;
+}
+
+.hud-time {
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    font-weight: 650;
+    color: var(--text);
+}
+
+.hud-actions { display: flex; gap: 8px; }
+
+.hud-btn {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+.hud-btn:disabled { opacity: 0.35; cursor: default; }
+.hud-btn:not(:disabled):hover { background: rgba(255, 255, 255, 0.12); }
+
+.board-status {
+    width: min(90vw, 420px);
+    margin: 0 auto 10px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 1.4em;
+}
+.board-status[hidden] { display: none; }
+
+/* 通关后的分享按钮 */
+.cta-button {
+    appearance: none;
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+.cta-button:hover { background: rgba(255, 255, 255, 0.14); }
+
+/* 复制被浏览器拦下时，摊开战报让用户手动选中复制 */
+#share-fallback {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: vertical;
+}
+#share-fallback-wrap small { color: var(--muted); }
