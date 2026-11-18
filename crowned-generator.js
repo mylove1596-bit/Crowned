@@ -271,6 +271,20 @@
     return stableHash(dateString + '|daily');
   }
 
+  /**
+   * 本地时区的当天日期串 —— 与 Swift 端
+   * `String(format: "%04d_%02d_%02d", year, month, day)` 同形。
+   *
+   * ⚠️ 必须用**本地**日期（getFullYear / getMonth / getDate），
+   *    不能用 toISOString() —— 那是 UTC，东八区早上 8 点前的访客会拿到昨天的题。
+   */
+  function dailyDateString(date) {
+    var d = date || new Date();
+    return d.getFullYear() + '_' +
+           ('0' + (d.getMonth() + 1)).slice(-2) + '_' +
+           ('0' + d.getDate()).slice(-2);
+  }
+
   global.CrownedPuzzle = {
     SplitMix64: SplitMix64,
     stableHash: stableHash,
@@ -278,7 +292,8 @@
     growRegions: growRegions,
     countSolutions: countSolutions,
     generateLevel: generateLevel,
-    dailySeed: dailySeed
+    dailySeed: dailySeed,
+    dailyDateString: dailyDateString
   };
 
   if (typeof module !== 'undefined' && module.exports) {

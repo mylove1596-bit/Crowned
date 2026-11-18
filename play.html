@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Same puzzle, same day — Crowned</title>
-<meta name="description" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — and you can play it right here, free.">
+<title id="page-title">Same puzzle, same day — Crowned</title>
+<meta name="description" id="page-desc" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — and you can play it right here, free.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0D0C0A">
 <!-- Smart App Banner：iOS Safari 顶部自动弹出「打开 Crowned Daily」，点击直达 App。
@@ -14,14 +14,14 @@
 </head>
 <body>
 <main>
-<h1>Same puzzle. Same day.</h1>
-<p><strong>Someone shared a Crowned puzzle with you.</strong> This is the exact board they played — and you can play it right here, in your browser, for free.</p>
+<h1 id="headline">Same puzzle. Same day.</h1>
+<p id="intro"><strong id="intro-lead">Someone shared a Crowned puzzle with you.</strong> <span id="intro-body">This is the exact board they played — and you can play it right here, in your browser, for free.</span></p>
 
-<h2>The exact board they played</h2>
+<h2 id="board-heading">The exact board they played</h2>
 <p id="puzzle-detail">Reading the puzzle link…</p>
 
 <div class="board-wrap">
-  <div class="board" id="board" role="grid" aria-label="The shared puzzle board"></div>
+  <div class="board" id="board" role="grid" aria-label="The puzzle board"></div>
 </div>
 
 <div class="hud" id="hud">
@@ -67,8 +67,12 @@
 <footer>
 <p>Crowned is published by an independent developer and is not affiliated with Apple, Inc. "Apple", "iPhone" and "App Store" are trademarks of Apple Inc.</p>
 </footer>
-<script src="crowned-generator.js"></script>
-<script src="crowned-rules.js"></script>
+<!-- ⚠️ 这两个 JS 带 ?v=N —— 改它们的时候一定要把 N 加一。
+     原因：GitHub Pages 的缓存策略会让浏览器拿到旧的 JS，而 play.html 已经是新的，
+     两边对不上时页面会直接报错（例：旧 JS 里没有 dailyDateString）。
+     改文件名没用（内容变了 URL 没变），只有加查询参数才能强制重新拉。 -->
+<script src="crowned-generator.js?v=2"></script>
+<script src="crowned-rules.js?v=2"></script>
 <script>
 (function () {
   'use strict';
@@ -117,22 +121,43 @@
   var shareFallbackWrap = document.getElementById('share-fallback-wrap');
   var shareFallback = document.getElementById('share-fallback');
   var dailyNote = document.getElementById('daily-note');
+  var pageTitle = document.getElementById('page-title');
+  var pageDesc = document.getElementById('page-desc');
+  var headline = document.getElementById('headline');
+  var introLead = document.getElementById('intro-lead');
+  var introBody = document.getElementById('intro-body');
+  var boardHeading = document.getElementById('board-heading');
 
-  if (!seed || !Number.isInteger(size) || size < 6 || size > 9) {
-    detail.textContent = 'This link is missing its puzzle parameters. Open it from the Crowned app.';
-    board.hidden = true;
-    return;
-  }
-
-  // ⚠️ 种子是 UInt64，最长 20 位十进制，早就超出 JS 的安全整数范围，
-  //    必须走 BigInt，否则解析出来的 seed 是错的，生成出来的就是另一道题。
+  // ⚠️ 两种模式：
+  //   ① URL 带 seed → **分享题**（某个人发给你的那道题）
+  //   ② URL 不带 seed → **每日题**（当天那道，和 App 里拿到的是同一道）
+  //
+  //   为什么必须有第 ② 种：每日谜题目录（The Dles / Goldles 那些）收的是
+  //   「每天自动换题的网页」，而且只给一个固定 URL。带死 seed 的链接明天就过期了。
+  var isDaily = !seed;
   var seedValue;
-  try {
-    seedValue = BigInt(seed);
-  } catch (e) {
-    detail.textContent = 'This puzzle link is malformed. Open it from the Crowned app.';
-    board.hidden = true;
-    return;
+
+  if (isDaily) {
+    // 和 App 内 `PuzzleGenerator.dailyLevel(for:calendar:)` 完全同一个口径：
+    // 本地时区的当天日期串 → stableHash(dateString + '|daily')，尺寸固定 6×6。
+    //
+    // ⚠️ 日期串由 crowned-generator.js 的 dailyDateString() 算 ——
+    //    它用**本地**日期（getFullYear/getMonth/getDate），不能用 toISOString()，
+    //    那是 UTC，东八区早上 8 点前的访客会拿到昨天的题。
+    seedValue = window.CrownedPuzzle.dailySeed(window.CrownedPuzzle.dailyDateString());
+    size = 6;
+    seed = seedValue.toString();
+  } else {
+    if (!Number.isInteger(size) || size < 6 || size > 9) size = 6;
+    // ⚠️ 种子是 UInt64，最长 20 位十进制，早就超出 JS 的安全整数范围，
+    //    必须走 BigInt，否则解析出来的 seed 是错的，生成出来的就是另一道题。
+    try {
+      seedValue = BigInt(seed);
+    } catch (e) {
+      detail.textContent = 'This puzzle link is malformed. Open it from the Crowned app.';
+      board.hidden = true;
+      return;
+    }
   }
 
   var level = null;
@@ -165,8 +190,25 @@
     return;
   }
 
-  detail.textContent = (SIZE_TITLES[size] || (size + '×' + size)) + ' — the exact grid they solved. ' +
-                       'Their time is on their post; yours starts now.';
+  if (isDaily) {
+    // 每日模式的文案和 SEO 标题 —— 目录站和搜索会用这一版
+    pageTitle.textContent = 'Crowned Daily — today\'s free logic puzzle';
+    pageDesc.setAttribute('content',
+      'Play today\'s Crowned daily logic puzzle in your browser. One crown per row, ' +
+      'column and colour region — no two may touch. Free, no account, works offline.');
+    headline.textContent = 'Today\'s Crowned puzzle.';
+    introLead.textContent = 'A new board every day at your local midnight.';
+    introBody.textContent = 'This is today\'s board — the same one the app gives you. ' +
+                            'Play it right here, in your browser, for free.';
+    boardHeading.textContent = 'Today\'s board';
+    detail.textContent = (SIZE_TITLES[size] || (size + '×' + size)) +
+                         ' — today\'s board. New at your local midnight.';
+    dailyNote.textContent = 'A new board at your local midnight. ' +
+                            'The app also keeps your streak and the bigger sizes.';
+  } else {
+    detail.textContent = (SIZE_TITLES[size] || (size + '×' + size)) + ' — the exact grid they solved. ' +
+                         'Their time is on their post; yours starts now.';
+  }
   boardNote.hidden = false;
   dailyNote.hidden = false;
 
