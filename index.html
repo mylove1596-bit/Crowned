@@ -41,7 +41,7 @@
 <!-- Smart App Banner：iOS Safari 顶部自动弹出「打开 Crowned Daily」，点击直达 App。
      App 未上架时横幅不显示（无害），上架瞬间自动生效，不用再改一次。 -->
 <meta name="apple-itunes-app" content="app-id=6832871902">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <main class="landing">
@@ -49,11 +49,11 @@
     <p class="tagline">The daily logic puzzle that takes five minutes.<br>
         One puzzle a day, changing at your local midnight. Works completely offline.</p>
 
-    <a class="cta" href="https://apps.apple.com/app/crowned-daily/id6832871902">Get Crowned on the App Store</a>
-    <p class="cta-note">Free to play. The daily puzzle is free for everyone.</p>
-
-    <p><a href="play.html"><strong>Play today's puzzle right here in your browser</strong></a>
-        — no install, no account, no ads. Shared puzzle links open the same page.</p>
+    <div class="cta-stack">
+        <a class="cta" id="cta-primary" href="https://apps.apple.com/app/crowned-daily/id6832871902">Get Crowned on the App Store</a>
+        <a class="cta cta-secondary" id="cta-secondary" href="play.html">Play today's puzzle in your browser</a>
+    </div>
+    <p class="cta-note" id="cta-note">Free to play. The daily puzzle is free for everyone.</p>
 
     <h2>How to play</h2>
     <ul class="cards">
@@ -76,6 +76,45 @@
         <a href="eula.html">EULA</a> ·
         <a href="support.html">Support</a></p>
 </main>
+<script>
+/*
+ * 主 CTA 按设备切换。
+ *
+ * ⚠️ 为什么必须切：
+ *    Threads 来的流量大多是**手机浏览器**点进来的，而 Android / Windows
+ *    根本装不了这个 iOS App —— 在那些机器上，「网页直接玩」才是唯一能走通的路。
+ *    让他们先去点一个装不上的商店按钮，是把流量直接漏掉。
+ *
+ * ⚠️ 只用 App Store 的机器（iPhone / iPad / Mac）才把 App Store 放前面 ——
+ *    因为只有 App 里有连胜和更大的尺寸。
+ */
+(function () {
+  'use strict';
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isMac = /Macintosh|Mac OS X/.test(ua) && !isIOS;
+
+  var APP = 'https://apps.apple.com/app/crowned-daily/id6832871902';
+  var primary = document.getElementById('cta-primary');
+  var secondary = document.getElementById('cta-secondary');
+  var note = document.getElementById('cta-note');
+
+  if (isIOS || isMac) {
+    primary.href = APP;
+    primary.textContent = 'Get Crowned on the App Store';
+    secondary.href = 'play.html';
+    secondary.textContent = "Play today's puzzle in your browser";
+    note.textContent = 'Free to play. The daily puzzle is free for everyone.';
+  } else {
+    primary.href = 'play.html';
+    primary.textContent = "Play today's puzzle in your browser";
+    secondary.href = APP;
+    secondary.textContent = 'Also on iPhone and iPad';
+    note.textContent = 'Free to play in your browser. No install, no account, no ads.';
+  }
+})();
+</script>
 <footer>
 <p>Crowned is published by an independent developer and is not affiliated with Apple, Inc.</p>
 </footer>

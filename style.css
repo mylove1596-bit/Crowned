@@ -326,3 +326,20 @@ footer p { font-size: 12px; color: rgba(247, 243, 233, 0.38); }
     resize: vertical;
 }
 #share-fallback-wrap small { color: var(--muted); }
+
+/* 落地页的两个 CTA（主 + 次） */
+.cta-stack { margin-bottom: 20px; }
+.cta-stack .cta { margin-bottom: 12px; }
+.cta-stack .cta:last-child { margin-bottom: 0; }
+
+/* 次要 CTA：视觉上不能和主 CTA 抢 */
+.cta-secondary {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--text);
+    font-weight: 700;
+}
+.cta-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* .cta 的 44px 下边距被 .cta-stack 收掉了，说明文字往上贴一点 */
+.landing .cta-note { margin: -8px 0 40px; }
