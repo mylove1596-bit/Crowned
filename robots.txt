@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# 站点很小，全部页面都希望被收录
+Disallow: /DEPLOY.md
+
+Sitemap: https://mylove1596-bit.github.io/Crowned/sitemap.xml

@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title id="page-title">Same puzzle, same day — Crowned</title>
 <meta name="description" id="page-desc" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — and you can play it right here, free.">
+<link rel="canonical" href="https://mylove1596-bit.github.io/Crowned/play">
+<meta property="og:title" id="og-title" content="Same puzzle, same day — Crowned">
+<meta property="og:description" id="og-desc" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — and you can play it right here, free.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://mylove1596-bit.github.io/Crowned/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" id="tw-title" content="Same puzzle, same day — Crowned">
+<meta name="twitter:description" id="tw-desc" content="Someone shared a Crowned daily logic puzzle with you. This is the exact board they played — and you can play it right here, free.">
+<meta name="twitter:image" content="https://mylove1596-bit.github.io/Crowned/og-image.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0D0C0A">
 <!-- Smart App Banner：iOS Safari 顶部自动弹出「打开 Crowned Daily」，点击直达 App。
@@ -192,10 +201,15 @@
 
   if (isDaily) {
     // 每日模式的文案和 SEO 标题 —— 目录站和搜索会用这一版
-    pageTitle.textContent = 'Crowned Daily — today\'s free logic puzzle';
-    pageDesc.setAttribute('content',
-      'Play today\'s Crowned daily logic puzzle in your browser. One crown per row, ' +
-      'column and colour region — no two may touch. Free, no account, works offline.');
+    var DAILY_TITLE = 'Crowned Daily — today\'s free logic puzzle';
+    var DAILY_DESC = 'Play today\'s Crowned daily logic puzzle in your browser. One crown per row, ' +
+                     'column and colour region — no two may touch. Free, no account, works offline.';
+    pageTitle.textContent = DAILY_TITLE;
+    pageDesc.setAttribute('content', DAILY_DESC);
+    document.getElementById('og-title').setAttribute('content', DAILY_TITLE);
+    document.getElementById('og-desc').setAttribute('content', DAILY_DESC);
+    document.getElementById('tw-title').setAttribute('content', DAILY_TITLE);
+    document.getElementById('tw-desc').setAttribute('content', DAILY_DESC);
     headline.textContent = 'Today\'s Crowned puzzle.';
     introLead.textContent = 'A new board every day at your local midnight.';
     introBody.textContent = 'This is today\'s board — the same one the app gives you. ' +

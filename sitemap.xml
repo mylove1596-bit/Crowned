@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  站点地图。
+
+  ⚠️ 注意 `play` 这一条：
+     它是**不带参数的**那个地址 —— 每天自动换成当天的题，所以是天天更新的。
+     带 seed 的分享链接不进 sitemap（那是一次性的具体题目，不该被当成常驻页面）。
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://mylove1596-bit.github.io/Crowned/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://mylove1596-bit.github.io/Crowned/play</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://mylove1596-bit.github.io/Crowned/privacy.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://mylove1596-bit.github.io/Crowned/terms.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://mylove1596-bit.github.io/Crowned/eula.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://mylove1596-bit.github.io/Crowned/support.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+</urlset>
